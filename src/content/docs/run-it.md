@@ -33,7 +33,7 @@ LOG=info cargo test -p integration_tests_core --test test_group_v2_scale \
   -- --nocapture --test-threads=1 > scale.log 2>&1
 ```
 
-**A simulation.** One process runs every member on a virtual clock and writes `group.log`:
+**A simulation.** One process, the quick check, runs every member on a virtual clock and writes `group.log`:
 
 ```sh
 cargo build --release -p integration_tests_core --bin harness-run
@@ -41,7 +41,8 @@ python3 tools/sim run tools/sim/scenarios/three.json \
   --one-process target/release/harness-run --out tmp/three
 ```
 
-[Simulations](../simulations/) covers scenarios, sweeps and a network of chat-cli peers.
+[Simulations](../simulations/) runs the members over a local network of chat-cli peers, up to 50, and
+covers scenarios and sweeps.
 
 **chat-cli.** `--headless --log-file FILE` writes the records unless `RUST_LOG` names another filter;
 `FILE` must not exist. The terminal UI writes them with
