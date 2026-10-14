@@ -1,32 +1,35 @@
 ---
 title: Simulations
-description: Run a group of up to 50 members from a scenario file over a local network of chat-cli peers, or in one process as a quick check, and let forks check judge it.
+description: Run a group of up to 50 members from a scenario file over a local network of chat-cli peers, in containers on a lossy wire, or in one process as a quick check, and let forks check judge it.
 ---
 
 `tools/sim` runs a group the way a scenario file says, on a local network: a headless chat-cli for each
 member, each with its own delivery node, on a network that holds the run's nodes and no other. It
-collects every member's log and holds the fork report against what the scenario expects. One process is
-the quick check.
+collects every member's log and holds the fork report against what the scenario expects. In containers,
+each member has an address of its own and a wire that delays and loses what it sends. One process is the
+quick check.
 
 ```mermaid
 flowchart TB
     sc["scenario.json"] --> sim["tools/sim"]
     sim --> ln["chat-cli peers<br/>a local network, or a fleet"]
+    sim --> ct["chat-cli peers in containers<br/>a wire with delay and loss"]
     sim --> op["one process, the quick check<br/>harness-run, virtual clock"]
     ln --> logs[("logs")]
+    ct --> logs
     op --> logs
     logs --> chk["forks report and forks check<br/>report.txt, run.txt, exit status"]
     logs -.->|"--share"| col["a collector"]
 ```
 
-## Three ways to run
+## Four ways to run
 
-| | Local network | One process | Fleet |
-|---|---|---|---|
-| Flag | `--chat-cli PATH` | `--one-process PATH` | `--chat-cli PATH`, and `preset` in the scenario |
-| Members | a headless chat-cli each, with its own delivery node, and a mock registry | clients in one process | chat-cli peers on `logos.test` |
-| Time | real | a virtual clock: seconds of group timers in milliseconds | real |
-| For | the real network stack, up to 50 members on one machine | a quick check of a change | the public fleet; not reproducible |
+| | Local network | Containers | One process | Fleet |
+|---|---|---|---|---|
+| Flag | `--chat-cli PATH` | `--image IMAGE` | `--one-process PATH` | `--chat-cli PATH`, and `preset` in the scenario |
+| Members | a headless chat-cli each, with its own delivery node, and a mock registry | the same, each in a container at an address of its own | clients in one process | chat-cli peers on `logos.test` |
+| Time | real | real | a virtual clock: seconds of group timers in milliseconds | real |
+| For | the real network stack, up to 50 members on one machine | the same over a wire with delay, jitter and loss, on Linux or a Mac | a quick check of a change | the public fleet; not reproducible |
 
 ## A first run
 
@@ -128,6 +131,72 @@ post    from   read by  median   worst  delivered   worst  lookup
 - **`signal 11 in its stop`** is the delivery library crashing as the peer stops, after the run has asked
   its node for the last time. It happens in larger runs and changes nothing the run measured.
 
+## In containers, on a lossy wire
+
+```sh
+nix build .#sim-image && ./result | docker load
+python3 tools/sim run tools/sim/scenarios/lossy-wire.json \
+  --image logos-chat-sim:latest --engine podman --out tmp/lossy-wire
+```
+
+```text
+5 members, fast group timers, largest message 512 KiB, containers of logos-chat-sim:latest on podman, wire seed 1, delay 40 ms, jitter 10 ms, loss 0.02
+whole: 5 of 5 members at the tip
+the report is as expected
+load average 0.11 at the start, 0.18 at the end
+
+node   ready   start  dials  wired  mesh  end  mesh  dialed  failed  refused  dropped  errors  exit
+saro  0.334s  0.334s      0      4     4    4     4       0       0        0        0       0     0
+raya  1.245s  0.631s      1      4     4    4     4       1       0        0        0       0     0
+pax   2.460s  0.937s      2      4     4    4     4       2       0        0        0       0     0
+mira  3.424s  0.689s      3      4     4    4     4       3       0        0        0       0     0
+kes   4.406s  0.676s      4      4     4    4     4       4       0        0        0       0     0
+
+batch  joiners  members  joined  seated  Welcome bytes
+1            2        3  0.861s  0.860s       2 x 7121
+2            2        5  1.078s  1.063s       2 x 9913
+
+post  from  read by  median   worst  delivered   worst  lookup
+1     saro   4 of 4  0.094s  0.111s     0.093s  0.111s  0.001s
+2     raya   4 of 4  0.092s  0.110s     0.092s  0.110s  0.001s
+3      pax   4 of 4  0.096s  0.118s     0.095s  0.117s  0.001s
+4     mira   4 of 4  0.091s  0.107s     0.090s  0.106s  0.001s
+5      kes   4 of 4  0.087s  0.092s     0.087s  0.092s  0.001s
+```
+
+`.#sim-image` is an image with chat-cli, Python for the registry, and `tc`. With `--image`, the registry
+and each peer run in a container of their own on a network made for the run, which reaches nothing outside
+it, and each node listens at its container's address. Docker runs the containers, or Podman with
+`--engine podman`. The run removes its containers and its network when it ends.
+
+The scenario's `wire` puts `netem` on each member's interface once the member is ready:
+
+```json
+"wire": {"seed": 1, "delay_ms": 40, "jitter_ms": 10, "loss": 0.02}
+```
+
+- **`delay_ms`** holds each packet a member sends, one number for all or by name, and **`jitter_ms`**
+  varies it either way. A round trip carries both ends' delays: the posts above took about 0.09 s,
+  where the same five on a bare wire took 0.003 to 0.012 s.
+- **`loss`** drops a share of the packets a member sends, drawn from `seed` and the member's name. TCP sends
+  a lost packet again, so the frame arrives late. `network`'s loss, which a frame does not survive, still
+  works in containers, and a scenario may have both.
+- `wire` needs `--image`, and a scenario with `preset` is refused with it.
+
+Fifty members in containers went whole on one machine of 16 cores, each peer taking about 0.35 s to start.
+
+On a Mac the engine runs its containers in a Linux virtual machine, and the image is built in a container
+of `nixos/nix`, from the repository root:
+
+```sh
+docker run --rm -v "$PWD":/src -w /src nixos/nix sh -c "
+  printf '[safe]\n\tdirectory = /src\n' > /root/.gitconfig &&
+  nix --extra-experimental-features 'nix-command flakes' --accept-flake-config \
+    build .#sim-image -o /tmp/image && /tmp/image" | docker load
+```
+
+No cache holds the delivery library for arm64 Linux, so on Apple silicon the first build compiles it.
+
 ## A scenario
 
 ```json
@@ -182,6 +251,7 @@ which is why `four.json` sets 33 s in place of 180.
 | `budget` | `180` | seconds each wait may take |
 | `max_message_kib` | `512` | the largest message a node takes; not with `preset`, and no effect in one process |
 | `network` | none | `seed`, `loss`, `welcome_loss`, `delay_ms` (one number, or by name) |
+| `wire` | none | `seed`, `delay_ms` (one number, or by name), `jitter_ms`, `loss`; needs `--image` |
 | `preset` | none | a fleet to join, such as `logos.test` |
 | `expect` | a whole group | how the outcome differs: `verdict`, `positions` by name, `posts` by name |
 
@@ -203,12 +273,13 @@ Every field is checked before anything starts. The full format, with every field
 | `twenty.json` | 20 members in two batches of 10 |
 | `fifty.json` | 50 members, with timers sized for fifty |
 | `lossy.json` | 5 members one at a time, with 5% of frames lost |
+| `lossy-wire.json` | 5 members two at a time on a wire of 40 ms, 10 ms of jitter and 2% loss, each posting; CI runs it in containers |
 | `fleet-five.json` | 5 members on `logos.test`, held for 300 s |
 
 ## Sweeps
 
 `sweep` does a scenario `--runs K` times and prints a row as each ends. With `network`, run k takes the
-seed `seed + k - 1`.
+seed `seed + k - 1`, and so it does with `wire`.
 
 ```sh
 nix develop -c python3 tools/sim sweep four.json --runs 5 \
@@ -271,3 +342,4 @@ nowhere else. Every member writes into `group.log`. `sweep` takes `--one-process
 | Fork Report | the forks tests, then the GroupV2 scale test with `LOG=info`, and `forks report` on its log, which must read `whole` |
 | Sim | the sim's tests |
 | Smoketest | `three.json` over a local network of chat-cli peers, on Linux and macOS |
+| Sim in containers | `three.json` and `lossy-wire.json` in containers, on Linux with Docker |
