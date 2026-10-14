@@ -23,7 +23,7 @@ flowchart TB
 
 ## 1. Get logs that hold the records
 
-The records are `info` lines on the target `libchat::report`. Every source below lets them through.
+The records are `info` lines on the target `libchat::groupv2trace`. Every source below lets them through.
 
 **A test.** The GroupV2 tests in `integration_tests_core` print the records with `LOG=info` (or `debug`),
 and only under `--nocapture`:
@@ -45,7 +45,7 @@ python3 tools/sim run tools/sim/scenarios/three.json \
 
 **chat-cli.** `--headless --log-file FILE` writes the records unless `RUST_LOG` names another filter;
 `FILE` must not exist. The terminal UI writes them with
-`RUST_LOG=warn,libchat::report=info` and `--log-file FILE`; without `--log-file` it logs nothing. Two
+`RUST_LOG=warn,libchat::groupv2trace=info` and `--log-file FILE`; without `--log-file` it logs nothing. Two
 peers on the file transport meet through one `--data` directory; give both `--registry-url` of a mock
 registry (`python3 .github/scripts/mock-registry.py` listens on `http://127.0.0.1:18080`).
 

@@ -38,10 +38,10 @@ epoch carries a **state**: 8 bytes of BLAKE2b over the MLS epoch authenticator.
 
 ## What each member writes
 
-The chat core writes one line per event on the log target `libchat::report`, at `info`:
+The chat core writes one line per event on the log target `libchat::groupv2trace`, at `info`:
 
 ```text
-2026-10-14T12:05:40.250000Z  INFO libchat::report: epoch installation=51e55f2c convo=c97b8bdf9a epoch=1 state=f5c9c15c49fac915 members=3 roster=7426eb33:7361726f,51e55f2c:72617961,69c76448:706178
+2026-10-14T12:05:40.250000Z  INFO libchat::groupv2trace: epoch installation=51e55f2c convo=c97b8bdf9a epoch=1 state=f5c9c15c49fac915 members=3 roster=7426eb33:7361726f,51e55f2c:72617961,69c76448:706178
 ```
 
 `run`, `epoch` and `left` decide the verdict. `sent`, `received`, `unreadable` and the app's `delivery`

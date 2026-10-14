@@ -1,13 +1,13 @@
 ---
 title: Records
-description: Each record the chat core writes on the log target libchat::report, with its fields.
+description: Each record the chat core writes on the log target libchat::groupv2trace, with its fields.
 ---
 
-A record is one log line at `info` on the target `libchat::report`: a name, then `key=value` words. The
+A record is one log line at `info` on the target `libchat::groupv2trace`: a name, then `key=value` words. The
 chat module writes `delivery` on its own target, `chat_module::report`.
 
 ```text
-2026-10-14T12:05:40.250000Z  INFO libchat::report: epoch installation=51e55f2c convo=c97b8bdf9a epoch=1 state=f5c9c15c49fac915 members=3 roster=7426eb33:7361726f,51e55f2c:72617961,69c76448:706178
+2026-10-14T12:05:40.250000Z  INFO libchat::groupv2trace: epoch installation=51e55f2c convo=c97b8bdf9a epoch=1 state=f5c9c15c49fac915 members=3 roster=7426eb33:7361726f,51e55f2c:72617961,69c76448:706178
 ```
 
 | Record | Written when | Fields |
