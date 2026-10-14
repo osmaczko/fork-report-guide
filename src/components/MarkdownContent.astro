@@ -1,0 +1,56 @@
+---
+import Default from "@astrojs/starlight/components/MarkdownContent.astro";
+---
+
+<Default><slot /></Default>
+
+<script>
+  // Diagrams are drawn in the browser, and drawn again when the theme changes. Labels are SVG text:
+  // an HTML label is clipped when the browser measures its width a fraction of a pixel off.
+  const blocks = [...document.querySelectorAll<HTMLElement>("pre.mermaid")];
+  if (blocks.length) {
+    const { default: mermaid } = await import("mermaid");
+    const sources = blocks.map((b) => b.textContent ?? "");
+    const font = '"Inter Variable", system-ui, sans-serif';
+    let drawn = 0;
+    const draw = async () => {
+      const dark = document.documentElement.dataset.theme === "dark";
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: "base",
+        htmlLabels: false,
+        fontFamily: font,
+        themeVariables: dark
+          ? { darkMode: true, background: "#17181c", primaryColor: "#1e3a33", primaryTextColor: "#e2e9e5",
+              primaryBorderColor: "#5cc2ab", lineColor: "#a3afa9", textColor: "#e2e9e5", clusterBkg: "#1b2420",
+              clusterBorder: "#36463f", noteBkgColor: "#352d1e", noteTextColor: "#f1e7d3", noteBorderColor: "#8f7546",
+              actorBkg: "#1e3a33", actorBorder: "#5cc2ab", actorTextColor: "#e2e9e5", signalColor: "#e2e9e5",
+              signalTextColor: "#e2e9e5", labelBoxBkgColor: "#1e3a33", labelBoxBorderColor: "#5cc2ab",
+              labelTextColor: "#e2e9e5", loopTextColor: "#e2e9e5", fontFamily: font }
+          : { background: "#ffffff", primaryColor: "#e4f1ed", primaryTextColor: "#18221e", primaryBorderColor: "#2f7d6d",
+              lineColor: "#56635d", textColor: "#18221e", clusterBkg: "#f2f6f4", clusterBorder: "#c3cec8",
+              noteBkgColor: "#f7f0e2", noteTextColor: "#18221e", noteBorderColor: "#c9a96b", actorBkg: "#e4f1ed",
+              actorBorder: "#2f7d6d", actorTextColor: "#18221e", signalColor: "#18221e", signalTextColor: "#18221e",
+              labelBoxBkgColor: "#e4f1ed", labelBoxBorderColor: "#2f7d6d", labelTextColor: "#18221e",
+              loopTextColor: "#18221e", fontFamily: font },
+        themeCSS: ".edgeLabel rect { opacity: 1; fill: var(--sl-color-bg); }",
+      });
+      await document.fonts.load(`16px ${font}`);
+      for (const [i, block] of blocks.entries()) {
+        const { svg } = await mermaid.render(`mermaid-${drawn++}`, sources[i]);
+        block.innerHTML = svg;
+      }
+    };
+    await draw();
+    new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  }
+</script>
+
+<script>
+  // A screenshot is wider than the column, so a click opens it at full size.
+  for (const img of document.querySelectorAll<HTMLImageElement>(".sl-markdown-content img")) {
+    const link = Object.assign(document.createElement("a"), { href: img.src, target: "_blank" });
+    img.replaceWith(link);
+    link.append(img);
+  }
+</script>

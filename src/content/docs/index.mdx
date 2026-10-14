@@ -1,0 +1,25 @@
+---
+title: Fork report
+description: Whether the members of a logos-chat group still hold one group, from their logs.
+tableOfContents: false
+---
+
+import { CardGrid, LinkButton, LinkCard } from "@astrojs/starlight/components";
+
+Whether the members of a GroupV2 conversation still hold one group. Every member writes a few one-line
+records into its log, the logs come together in one place, and one rule reads them and gives a verdict:
+`whole`, or `split at epoch 4`.
+
+<LinkButton href="run-it/" icon="right-arrow">Run it</LinkButton>
+<LinkButton href="how-it-works/" variant="secondary">How it works</LinkButton>
+
+## The guide
+
+<CardGrid>
+  <LinkCard title="How it works" href="how-it-works/" description="How a group state is identified, what each member writes, and the rule that turns logs into a verdict." />
+  <LinkCard title="Run it" href="run-it/" description="Records from a test, chat-cli or the app; a report from files; the collector and its page." />
+  <LinkCard title="Read the report" href="read-the-report/" description="The text report line by line, every position and verdict, and the page." />
+  <LinkCard title="Simulations" href="simulations/" description="Scenario files, one process or a local network, sweeps, and forks check as the judge." />
+  <LinkCard title="Commands" href="reference/commands/" description="Every subcommand of forks and sim, with its flags." />
+  <LinkCard title="Records" href="reference/records/" description="Each record the chat core writes, its fields and when." />
+</CardGrid>

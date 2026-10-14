@@ -1,0 +1,33 @@
+:root {
+  --sl-font: "Inter Variable", system-ui, sans-serif;
+  --sl-content-width: 50rem;
+  --sl-color-accent-low: #12302a;
+  --sl-color-accent: #2f8f7b;
+  --sl-color-accent-high: #b8eadf;
+}
+:root[data-theme="light"] {
+  --sl-color-accent-low: #d6f0ea;
+  --sl-color-accent: #1f7363;
+  --sl-color-accent-high: #12392f;
+}
+
+.sl-markdown-content pre.mermaid {
+  padding: 0;
+  border: 0;
+  background: none;
+  overflow-x: auto;
+  text-align: center;
+}
+.sl-markdown-content pre.mermaid:not(:has(svg)) {
+  color: transparent;
+}
+.sl-markdown-content pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.sl-markdown-content img {
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 0.5rem;
+  cursor: zoom-in;
+}
