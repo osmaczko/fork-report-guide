@@ -84,10 +84,13 @@ Each call carries `Authorization: Bearer TOKEN`; a browser's `GET` may carry the
 ```sh
 python3 tools/sim run SCENARIO RIG --out DIR [--share ADDRESS]
 python3 tools/sim sweep SCENARIO RIG --out DIR --runs K [--share ADDRESS]
+nix run .#APP -- run SCENARIO --out DIR [--share ADDRESS]
 ```
 
 `run` runs the scenario once; `sweep` runs it K times, one after another. `RIG` is one of
-`--chat-cli PATH` or `--one-process PATH` (harness-run). `DIR` must not exist. Both exit 0 when every run
+`--chat-cli PATH`, `--image IMAGE [--engine docker|podman]` or `--one-process PATH` (harness-run). The flake's
+apps build a rig and give its flag: `groupv2-simulation` (one process), `groupv2-simulation-processes` and
+`groupv2-simulation-containers` (Linux). `DIR` must not exist. Both exit 0 when every run
 went as expected, 1 when one did not, 2 when the command line or the scenario is refused, and 128 + n on
 signal n.
 
