@@ -46,7 +46,7 @@ covers scenarios and sweeps.
 **chat-cli.** `--headless --log-file FILE` writes the records unless `RUST_LOG` names another filter;
 `FILE` must not exist. The terminal UI writes them with
 `RUST_LOG=warn,libchat::groupv2trace=info` and `--log-file FILE`; without `--log-file` it logs nothing. Two
-peers on the file transport meet through one `--data` directory; give both `--registry-url` of a mock
+peers on `--transport file` meet through one `--data` directory; give both `--registry-url` of a mock
 registry (`python3 .github/scripts/mock-registry.py` listens on `http://127.0.0.1:18080`).
 
 **The app.** With the logos-chat-module and logos-chat-ui pull requests, each run of the app writes
