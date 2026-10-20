@@ -19,8 +19,10 @@ conversation b05d4417e9
   4 of 4 seats share a log
 
   branch A: epoch 4, state 5a850890461cab7f, 4 members
+    first state at epoch 3, made by commit c41f9be27a6d03e5 by a3f91c07
     on it: 19f6b0e3, 7b1e44d9, a3f91c07
   branch B: epoch 3, state e849c2aa9ab1f74d, 4 members
+    first state at epoch 3, made by commit 77b0a1c2d3e4f5a6 by 7b1e44d9
     on it: e09a3f52
 
   installation  account   name  epoch  position  branch
@@ -38,6 +40,7 @@ lines: 69 read, 42 records, 0 without a stamp, 0 malformed, 0 unknown
 | verdict | one of the verdicts below |
 | `S of T seats share a log` | T counts the seats neither removed nor ended, S those of them whose log is here. The lower S, the less a `whole` is worth |
 | `branch` | the newest state on each branch, its roster's size, and who is on it. Without a split there is one branch, `A`. A branch can have `nobody` on it |
+| `first state` | with a split, the commit that made a branch's first state and the installation that committed it, where the logs name one |
 | the table | every seat: its newest epoch, its position, its branch. `name` lists the runs it wrote in, each its log's file name without `.log`; a one-process run writes every member into `group.log`, so each shows `group` |
 | `lines` | what was read. Malformed records are skipped and counted in a line above this one, and the report exits 1 |
 
